@@ -1,6 +1,6 @@
 # freeipa-sam
 ## Service Account Manager for FreeIPA  
-![freeipa-sam.png](freeipa-sam.png)
+![freeipa-sam.gif](freeipa-sam.gif)
 
 
 FreeIPA-SAM is an interactive, menu-driven bash script for lifecycle management of service accounts.  
