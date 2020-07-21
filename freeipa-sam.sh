@@ -3,7 +3,7 @@ ssleval=true
 prefix=https
 passeval() { [ -z $bindpass ] && passeval="UNSET!" || passeval="SET!"; }
 ssleval() { [ "$prefix" == "https" ] && ssleval="true" || ssleval="false"; }
-actionseval() { [ "$ldapserver"] && [ "$binduser" ] && [ "$domain" ] && [ "$passeval" ] && actionseval="ready" || actionseval="conditions not yet met" && return 1; }
+actionseval() { [ "$ldapserver" ] && [ "$binduser" ] && [ "$domain" ] && [ "$passeval" == "SET!" ] && actionseval="ready" || actionseval="conditions not yet met" && return 1; }
 
 menu() {
   passeval
@@ -57,7 +57,9 @@ dotask() {
     poc)
       results=$(ldapsearch "$prefix""://""$ldapserver" -b "$ldapdomain" -D "$binduser" -w "$bindpass")
       ;;
-
+    ls)
+      results=$(ldapsearch "$prefix""://""$ldapserver" -b "cn=sysaccounts,cn=etc,$ldapdomain" -D "$binduser" -w "$bindpass" "(uid=*)" "uid" "memberOf" "passwordExpirationTime")
+      ;;
 
 
     exit)
