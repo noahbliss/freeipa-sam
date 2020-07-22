@@ -11,7 +11,7 @@ menu() {
   actionseval
   clear
   echo "\
-### FreeIPA - Service Account Manager ###
+### FreeIPA - System Account Manager ###
 1.) ldapserver=$ldapserver
 2.) domain=$domain (ldapdomain=$ldapdomain)
 3.) binduser=$binduser
