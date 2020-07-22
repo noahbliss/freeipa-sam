@@ -2,7 +2,7 @@
 ssleval=true
 prefix=ldaps
 passeval() { [ -z $bindpass ] && passeval="UNSET!" || passeval="SET!"; }
-ssleval() { [ "$prefix" == "https" ] && ssleval="true" || ssleval="false"; }
+ssleval() { [ "$prefix" == "ldaps" ] && ssleval="true" || ssleval="false"; }
 actionseval() { [ "$ldapserver" ] && [ "$binduser" ] && [ "$domain" ] && [ "$passeval" == "SET!" ] && actionseval="ready" || actionseval="conditions not yet met" && return 1; }
 
 menu() {
@@ -11,7 +11,7 @@ menu() {
   actionseval
   clear
   echo "\
-### FreeIPA-SAM ###
+### FreeIPA - Service Account Manager ###
 1.) ldapserver=$ldapserver
 2.) domain=$domain (ldapdomain=$ldapdomain)
 3.) binduser=$binduser
@@ -50,7 +50,7 @@ dotask() {
       read -sp "Enter password (will not echo): " bindpass
       ;;
     5|ssl)
-      [ "$prefix" == "https" ] && prefix=http || prefix=https
+      [ "$prefix" == "ldaps" ] && prefix=http || prefix=ldaps
       ;;
 
 # Actions
@@ -58,7 +58,11 @@ dotask() {
     #   results=$(ldapsearch "$prefix""://""$ldapserver" -b "$ldapdomain" -D "$binduser" -w "$bindpass")
     #   ;;
     ls)
-      results=$(ldapsearch "$prefix""://""$ldapserver" -b "cn=sysaccounts,cn=etc,$ldapdomain" -D "$binduser" -w "$bindpass" "(uid=*)" "uid" "memberOf" "passwordExpirationTime")
+      results=$(ldapsearch -H "$prefix""://""$ldapserver" -b "cn=sysaccounts,cn=etc,$ldapdomain" -D "$binduser" -w "$bindpass" "(uid=*)" "dn" | grep 'dn: uid')
+      ;;
+    info)
+      [ "$2" ] && local uid="$2" || uid="*"
+      results=$(ldapsearch -H "$prefix""://""$ldapserver" -b "cn=sysaccounts,cn=etc,$ldapdomain" -D "$binduser" -w "$bindpass" "(uid=$uid)" "uid" "memberOf" "passwordExpirationTime")
       ;;
     add)
       local uid password
@@ -84,9 +88,24 @@ echo -E "\
 dn: uid=$uid,cn=sysaccounts,cn=etc,$ldapdomain
 changetype: delete" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -w "$bindpass" && results="Submitted." || results="Error."
       ;;
-
+    passwd)
+    local uid password
+    [ "$2" ] && local uid="$2" || read -p "uid of user=" uid
+    read -sp "new password for user=" password
+    echo
+    read -p "password expiration date YYYYMMDD (blank for 20380119)=" expire
+    [ -z "$expire" ] && expire=20380119
+echo -E "\
+dn: uid=$uid,cn=sysaccounts,cn=etc,$ldapdomain
+changetype: modify
+userPassword: $password
+passwordExpirationTime: ${expire}031407Z" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -w "$bindpass" && results="Submitted." || results="Error."
+      ;;
     exit)
       exit
+      ;;
+    "")
+      results=""
       ;;
     *)
       results="\"$input\" command not found."
