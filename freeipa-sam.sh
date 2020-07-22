@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ssleval=true
-prefix=https
+prefix=ldaps
 passeval() { [ -z $bindpass ] && passeval="UNSET!" || passeval="SET!"; }
 ssleval() { [ "$prefix" == "https" ] && ssleval="true" || ssleval="false"; }
 actionseval() { [ "$ldapserver" ] && [ "$binduser" ] && [ "$domain" ] && [ "$passeval" == "SET!" ] && actionseval="ready" || actionseval="conditions not yet met" && return 1; }
@@ -11,7 +11,7 @@ menu() {
   actionseval
   clear
   echo "\
-### Main Menu ###
+### FreeIPA-SAM ###
 1.) ldapserver=$ldapserver
 2.) domain=$domain (ldapdomain=$ldapdomain)
 3.) binduser=$binduser
@@ -19,7 +19,7 @@ menu() {
 5.) ssl=$ssleval
 
 Actions ($actionseval):
-  poc | add | rm | ls | info | passwd
+  add | rm | ls | info | passwd
 
 ---   Results   ---
 $results
@@ -54,13 +54,36 @@ dotask() {
       ;;
 
 # Actions
-    poc)
-      results=$(ldapsearch "$prefix""://""$ldapserver" -b "$ldapdomain" -D "$binduser" -w "$bindpass")
-      ;;
+    # poc)
+    #   results=$(ldapsearch "$prefix""://""$ldapserver" -b "$ldapdomain" -D "$binduser" -w "$bindpass")
+    #   ;;
     ls)
       results=$(ldapsearch "$prefix""://""$ldapserver" -b "cn=sysaccounts,cn=etc,$ldapdomain" -D "$binduser" -w "$bindpass" "(uid=*)" "uid" "memberOf" "passwordExpirationTime")
       ;;
-
+    add)
+      local uid password
+      [ "$2" ] && local uid="$2" || read -p "uid of new user=" uid
+      read -sp "password of new user=" password
+      echo
+      read -p "password expiration date YYYYMMDD (blank for 20380119)=" expire
+      [ -z "$expire" ] && expire=20380119
+echo -E "\
+dn: uid=$uid,cn=sysaccounts,cn=etc,$ldapdomain
+changetype: add
+objectclass: account
+objectclass: simplesecurityobject
+uid: $uid
+userPassword: $password
+passwordExpirationTime: ${expire}031407Z
+nsIdleTimeout: 0" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -w "$bindpass" && results="Submitted." || results="Error."
+      ;;
+    rm)
+      local uid
+      [ "$2" ] && local uid="$2" || read -p "uid of user to remove=" uid
+echo -E "\
+dn: uid=$uid,cn=sysaccounts,cn=etc,$ldapdomain
+changetype: delete" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -w "$bindpass" && results="Submitted." || results="Error."
+      ;;
 
     exit)
       exit
