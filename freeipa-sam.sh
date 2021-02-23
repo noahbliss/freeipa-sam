@@ -27,16 +27,20 @@ $results
 "
 }
 
+domain2ldapdomain() {
+   echo "${1}" | awk -F'.' '{for(i=1;i<=NF;i++) printf "dc="$i","; print ""}' | sed 's/,$//'
+}
+
 dotask() {
   case $1 in
 # Setup
     1|ldapserver)
       read -p "ldapserver=" ldapserver
-      [ -z $domain ] && domain=${ldapserver#*.} && ldapdomain=$(echo "$domain" | awk -F'.' '{ print "dc="$1",dc="$2}')
+      [ -z $domain ] && domain=${ldapserver#*.} && ldapdomain=$(domain2ldapdomain "$domain")
       ;;
     2|domain)
       read -p "domain=" domain
-      ldapdomain=$(echo "$domain" | awk -F'.' '{ print "dc="$1",dc="$2}')
+      ldapdomain=$(domain2ldapdomain "$domain")
       #read -p "ldapdomain=" ldapdomain
       ;;
     3|binduser)
