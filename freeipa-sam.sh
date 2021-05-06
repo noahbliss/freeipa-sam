@@ -102,7 +102,10 @@ changetype: delete" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -
 echo -E "\
 dn: uid=$uid,cn=sysaccounts,cn=etc,$ldapdomain
 changetype: modify
+replace: userPassword
 userPassword: $password
+-
+replace: passwordExpirationTime
 passwordExpirationTime: ${expire}031407Z" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -w "$bindpass" && results="Submitted." || results="Error."
       ;;
     exit)
