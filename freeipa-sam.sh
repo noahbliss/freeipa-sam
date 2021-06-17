@@ -71,7 +71,8 @@ dotask() {
     add)
       local uid password
       [ "$2" ] && local uid="$2" || read -p "uid of new user=" uid
-      read -sp "password of new user=" password
+      read -sp "password of new user (blank to generate a password)=" password
+      [ -z "$password" ] && password=$(randpw) && echo && echo "Generated password: $password"
       echo
       read -p "password expiration date YYYYMMDD (blank for 20380119)=" expire
       [ -z "$expire" ] && expire=20380119
@@ -95,7 +96,8 @@ changetype: delete" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -
     passwd)
     local uid password
     [ "$2" ] && local uid="$2" || read -p "uid of user=" uid
-    read -sp "new password for user=" password
+    read -sp "new password for user (blank to generate a password)=" password
+    [ -z "$password" ] && password=$(randpw) && echo && echo "Generated password: $password"
     echo
     read -p "password expiration date YYYYMMDD (blank for 20380119)=" expire
     [ -z "$expire" ] && expire=20380119
@@ -120,6 +122,7 @@ passwordExpirationTime: ${expire}031407Z" | ldapmodify -H "$prefix""://""$ldapse
 }
 
 prompt() { read -p '> ' input; dotask $input; }
+randpw() { < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-20};echo;}
 
 while :; do
   menu
