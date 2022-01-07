@@ -54,7 +54,7 @@ dotask() {
       read -sp "Enter password (will not echo): " bindpass
       ;;
     5|ssl)
-      [ "$prefix" == "ldaps" ] && prefix=http || prefix=ldaps
+      [ "$prefix" == "ldaps" ] && prefix=ldap || prefix=ldaps
       ;;
 
 # Actions
