@@ -1,9 +1,29 @@
 #!/usr/bin/env bash
+rcfile="${HOME}/.ipa/freeipa-sam.rc"
+if [ -e "$rcfile" ]; then
+  source "$rcfile"
+fi
 ssleval=true
 prefix=ldaps
 passeval() { [ -z $bindpass ] && passeval="UNSET!" || passeval="SET!"; }
 ssleval() { [ "$prefix" == "ldaps" ] && ssleval="true" || ssleval="false"; }
 actionseval() { [ "$ldapserver" ] && [ "$binduser" ] && [ "$domain" ] && [ "$passeval" == "SET!" ] && actionseval="ready" || actionseval="conditions not yet met" && return 1; }
+
+savercfile() {
+  test -d "${HOME}/.ipa" || mkdir -p "${HOME}/.ipa"
+  cat > "${HOME}/.ipa/freeipa-sam.rc" <<EOF
+# freeipa-sam rc-file
+ldapserver="$ldapserver"
+binduser="$binduser"
+domain="$domain"
+ldapdomain="$ldapdomain"
+ssleval=$ssleval
+prefix="$prefix"
+EOF
+  if [ -n "$1" ] && [ "$1" == 'exit' ]; then
+    exit
+  fi
+}
 
 menu() {
   passeval
@@ -19,7 +39,7 @@ menu() {
 5.) ssl=$ssleval
 
 Actions ($actionseval):
-  add | rm | ls | info | passwd
+  add | rm | ls | info | passwd | rcfile
 
 ---   Results   ---
 $results
@@ -110,8 +130,11 @@ userPassword: $password
 replace: passwordExpirationTime
 passwordExpirationTime: ${expire}031407Z" | ldapmodify -H "$prefix""://""$ldapserver" -D "$binduser" -w "$bindpass" && results="Submitted." || results="Error."
       ;;
+    rcfile)
+      savercfile
+      ;;
     exit)
-      exit
+      savercfile exit
       ;;
     "")
       results=""
