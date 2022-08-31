@@ -33,10 +33,11 @@ Usage is pretty straightforward, it is highly-recommended that you leave SSL ena
 `passwd` interactively prompts for the new password and password expiration date.  
 `passwd` finally sends a prefilled ldapmodify to the server.  
 
-### `rcfile`
-`rcfile` saves current directory connection settings (excepted `bindpass`) into a RC-file (stored into `${HOME}/.ipa/freeipa-sam.rc`)
-If the file exists, variable are automatically read at script startup.
-RC-file is also automatically written at normal exit (using `exit` command action)
+### `save`
+`save` saves current directory connection settings (excepted `bindpass`) into an RC-file (`${HOME}/.ipa/freeipa-sam.rc`)
+If the file exists, variable are automatically read at script startup, and updated in the file on script exit. 
+If the file does not exist when the script is started, nothing will be saved unless `save` is run manually. 
+
 
 PRs and issues welcome, but support cannot be promised.  
 Cheers!  
